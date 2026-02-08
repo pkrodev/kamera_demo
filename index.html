@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>DEMO – Inteligentna kamera (wjazdy pod kontrolą)</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <nav class="nav">
+      <!-- LOGO: logo.png obok index.html -->
+      <a class="brand" href="#top" aria-label="Przejdź na górę strony">
+        <img class="brand-logo" src="logo.png" alt="Smart Wjazd" />
+        <span class="brand-badge">DEMO</span>
+      </a>
+
+      <div class="nav-links">
+        <a class="nav-link" href="#demo">Wizualizacja</a>
+        <a class="nav-link" href="#benefits">Korzyści</a>
+      </div>
+    </nav>
+
+    <section class="hero" id="top">
+      <div class="hero-inner">
+        <h1>Inteligentna kamera — wjazdy pod kontrolą</h1>
+        <p class="lead">
+          Podgląd na żywo, odczyt numeru i czytelna historia zdarzeń.
+          Prosto i „po ludzku” dla ochrony, recepcji, administracji i warsztatu.
+        </p>
+
+        <div class="hero-actions">
+          <button class="btn primary" id="ctaSee">Zobacz jak działa</button>
+          <a class="btn ghost" href="#benefits">Zobacz korzyści</a>
+        </div>
+
+        <div class="hero-strip" aria-label="Skrót działania">
+          <div class="strip-item">
+            <div class="strip-kicker">1</div>
+            <div class="strip-text">Kamera zauważa pojazd</div>
+          </div>
+          <div class="strip-item">
+            <div class="strip-kicker">2</div>
+            <div class="strip-text">Decyzja o wjeździe</div>
+          </div>
+          <div class="strip-item">
+            <div class="strip-kicker">3</div>
+            <div class="strip-text">Historia i kontrola</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-bg" aria-hidden="true"></div>
+    </section>
+  </header>
+
+  <main>
+    <section class="section demo-section" id="demo">
+      <div class="section-head">
+        <h2>DEMO aplikacji</h2>
+        <p class="muted">
+          To wizualizacja działania — wideo steruje tym, co widzisz w overlayu i w historii wjazdów.
+        </p>
+      </div>
+
+      <div class="app-card" role="region" aria-label="Okno aplikacji demo">
+        <!-- A) Podgląd kamery -->
+        <section class="panel camera-panel" aria-label="Podgląd z kamery">
+          <div class="panel-head">
+            <div class="panel-title">
+              <h3>Podgląd z kamery</h3>
+              <div class="chip" id="chipLive">Na żywo (DEMO)</div>
+            </div>
+
+            <div class="panel-sub muted">
+              Podgląd + subtelny overlay (komunikaty).
+            </div>
+          </div>
+
+          <div class="video-shell" id="videoShell">
+            <video id="cameraVideo" muted playsinline preload="auto" loop aria-label="Wideo z kamery (DEMO)">
+              <source src="kamera-demo.mp4" type="video/mp4" />
+            </video>
+
+            <!-- Fallback (nie zasłania wideo, gdy plik jest OK) -->
+            <div class="video-placeholder" id="videoPlaceholder" hidden>
+              <div class="placeholder-inner">
+                <div class="placeholder-title">
+                  Brak pliku wideo: <strong>kamera-demo.mp4</strong>
+                </div>
+                <div class="placeholder-sub muted">
+                  Umieść plik obok <code>index.html</code> i odśwież stronę.
+                </div>
+              </div>
+            </div>
+
+            <!-- Overlay (bez kwadratu skanowania) -->
+            <div class="overlay" id="overlay" aria-hidden="true">
+              <div class="overlay-badges">
+                <div class="badge" id="badgeDetected">Wykryto pojazd</div>
+                <div class="badge">
+                  Numer: <span class="mono" id="plateText">—</span>
+                </div>
+                <div class="badge">
+                  Kolor: <span id="colorText">—</span>
+                </div>
+              </div>
+
+              <div class="overlay-meta">
+                <div class="mini-tag" id="makeTag">—</div>
+              </div>
+
+              <div class="toast" id="toast">
+                <div class="toast-dot" aria-hidden="true"></div>
+                <div class="toast-text" id="toastText">Nowy wjazd wykryty</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button class="btn small" id="btnPlay" type="button">Play</button>
+            <button class="btn small" id="btnRestart" type="button">Restart</button>
+            <div class="spacer" aria-hidden="true"></div>
+            <button class="btn small" data-jump="0" type="button">Auto 1</button>
+            <button class="btn small" data-jump="1" type="button">Auto 2</button>
+            <button class="btn small" data-jump="2" type="button">Auto 3</button>
+            <button class="btn small" id="btnFreeze" type="button">Pauza na ujęciu</button>
+          </div>
+
+          <div class="hint muted" id="videoHint">
+            Tip: „Auto 1/2/3” przeskakuje do ujęcia. „Pauza na ujęciu” zatrzymuje / wznawia podgląd.
+          </div>
+        </section>
+
+        <!-- B) Panel użytkownika -->
+        <section class="panel user-panel" aria-label="Panel użytkownika">
+          <div class="panel-head">
+            <div class="panel-title">
+              <h3>Panel użytkownika</h3>
+
+              <div class="stage-progress" aria-label="Postęp etapów">
+                <button class="dot" data-stage="1" aria-label="Etap 1" type="button"></button>
+                <button class="dot" data-stage="2" aria-label="Etap 2" type="button"></button>
+                <button class="dot" data-stage="3" aria-label="Etap 3" type="button"></button>
+                <div class="bar" aria-hidden="true"><span id="barFill"></span></div>
+              </div>
+            </div>
+
+            <div class="panel-sub muted">
+              Etapy przełączają się spokojnie wraz z kolejnymi ujęciami wideo, przyciskiem „Dalej” oraz przewijaniem.
+            </div>
+          </div>
+
+          <div class="current" id="currentSummary">
+            <div class="current-title">Aktualnie w kadrze:</div>
+            <div class="current-row">
+              <div class="pill mono" id="pillPlate">—</div>
+              <div class="pill" id="pillMake">—</div>
+              <div class="pill" id="pillColor">—</div>
+            </div>
+          </div>
+
+          <!-- Etap 1 -->
+          <section class="stage" data-stage-panel="1">
+            <h4>Etap 1: Kamera zauważa pojazd</h4>
+            <p class="muted">
+              Widzisz numer i podstawowe informacje. Bez „szarpania” — demo ma być czytelne.
+            </p>
+
+            <div class="status-cards">
+              <div class="card mini">
+                <div class="label">Stan</div>
+                <div class="value" id="s1State">Wykrywanie…</div>
+              </div>
+              <div class="card mini">
+                <div class="label">Odczyt numeru</div>
+                <div class="value mono" id="s1Plate">—</div>
+              </div>
+              <div class="card mini">
+                <div class="label">Kolor</div>
+                <div class="value" id="s1Color">—</div>
+              </div>
+            </div>
+
+            <div class="next-row">
+              <button class="btn primary" id="btnNext1" type="button">Dalej</button>
+              <div class="soft-note muted">Możesz też kliknąć kropki 1/2/3 u góry.</div>
+            </div>
+          </section>
+
+          <!-- Etap 2 -->
+          <section class="stage" data-stage-panel="2" hidden>
+            <h4>Etap 2: Decyzja o wjeździe</h4>
+            <p class="muted">
+              <span id="checkingText">Sprawdzam listę uprawnień…</span>
+            </p>
+
+            <div class="toggle" role="group" aria-label="Czy pojazd jest na liście">
+              <button class="toggle-btn" id="toggleAllowed" type="button">Na liście</button>
+              <button class="toggle-btn" id="toggleNeeds" type="button">Poza listą</button>
+            </div>
+
+            <div class="decision" id="decisionCard">
+              <div class="decision-title" id="decisionTitle">—</div>
+              <div class="decision-sub" id="decisionSub">—</div>
+            </div>
+
+            <div class="next-row">
+              <button class="btn primary" id="btnNext2" type="button">Dalej</button>
+              <button class="btn" id="btnBack2" type="button">Wróć</button>
+            </div>
+          </section>
+
+          <!-- Etap 3 -->
+          <section class="stage" data-stage-panel="3" hidden>
+            <h4>Etap 3: Historia i kontrola</h4>
+            <p class="muted">
+              Wpisy dopisują się automatycznie, gdy kamera widzi kolejne auta. Każde ujęcie dopisuje się tylko raz.
+            </p>
+
+            <div class="history" aria-label="Historia zdarzeń">
+              <div class="history-head">
+                <div>Godzina</div>
+                <div>Numer</div>
+                <div>Status</div>
+              </div>
+
+              <div class="history-body" id="historyBody" aria-live="polite">
+                <div class="history-empty" id="historyEmpty">
+                  Jeszcze brak wpisów — uruchom wideo.
+                </div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn" id="btnAddToList" type="button">Dodaj do listy</button>
+              <button class="btn" id="btnOneTime" type="button">Jednorazowy wjazd</button>
+              <button class="btn primary" id="btnRestartFlow" type="button">Restart DEMO</button>
+            </div>
+
+            <div class="footnote">
+              <strong>Dane zostają u Ciebie</strong> — system może działać lokalnie.
+            </div>
+
+            <div class="next-row">
+              <button class="btn" id="btnBack3" type="button">Wróć</button>
+            </div>
+          </section>
+        </section>
+      </div>
+
+      <div class="scroll-steps" aria-label="Przewijaj, aby zmieniać etapy">
+        <article class="step-card" data-stage-step="1">
+          <div class="step-kicker">Przewijaj</div>
+          <h3>1) Kamera zauważa pojazd</h3>
+          <p class="muted">Na obrazie pojawia się komunikat z numerem.</p>
+        </article>
+
+        <article class="step-card" data-stage-step="2">
+          <div class="step-kicker">Przewijaj</div>
+          <h3>2) Decyzja o wjeździe</h3>
+          <p class="muted">Na liście — wjazd dozwolony. Poza listą — wymaga akceptacji i idzie powiadomienie.</p>
+        </article>
+
+        <article class="step-card" data-stage-step="3">
+          <div class="step-kicker">Przewijaj</div>
+          <h3>3) Historia i kontrola</h3>
+          <p class="muted">Zdarzenia zapisują się w historii. Możesz dodać numer do listy lub przyznać jednorazowy wjazd.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section benefits" id="benefits">
+      <div class="section-head">
+        <h2>Korzyści</h2>
+        <p class="muted">Czytelny widok dla ludzi: co wjechało, kiedy i z jaką decyzją.</p>
+      </div>
+
+      <div class="tiles" role="list" aria-label="Kafelki korzyści">
+        <div class="tile" role="listitem">
+          <div class="tile-title">Mniej telefonów, mniej nerwów</div>
+          <div class="tile-text muted">Powiadomienie pojawia się tylko gdy trzeba — reszta dzieje się sama.</div>
+        </div>
+        <div class="tile" role="listitem">
+          <div class="tile-title">Historia wjazdów w jednym miejscu</div>
+          <div class="tile-text muted">Kto, kiedy i z jakim statusem — prosto do sprawdzenia.</div>
+        </div>
+        <div class="tile" role="listitem">
+          <div class="tile-title">Jednorazowe wjazdy bez zamieszania</div>
+          <div class="tile-text muted">Gdy ktoś przyjechał „na chwilę” — dajesz dostęp jednym kliknięciem.</div>
+        </div>
+        <div class="tile" role="listitem">
+          <div class="tile-title">Działa też lokalnie</div>
+          <div class="tile-text muted">Dane zostają u Ciebie — to ważne w wielu obiektach i warsztatach.</div>
+        </div>
+      </div>
+
+      <div class="cta-card" role="region" aria-label="Wezwanie do działania">
+<div>
+  <h3>Poproś o wycenę wdrożenia</h3>
+  <p class="muted">
+    <br />
+    <strong>Zapytaj o wycenę na oficjalnej stronie twórców.</strong>
+  </p>
+</div>
+
+<button class="btn primary" id="btnQuote" type="button">
+  Zapytaj o wycenę na oficjalnej stronie twórców
+</button>
+
+<script>
+  document.getElementById("btnQuote").addEventListener("click", () => {
+    window.open("https://www.nightcode.pl", "_blank", "noopener,noreferrer");
+  });
+</script>
+
+    </section>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="muted">© DEMO • Inteligentna kamera — wizualizacja działania</div>
+        <a class="nav-link" href="#top">Wróć na górę</a>
+      </div>
+    </footer>
+
+    <div class="ui-toast" id="uiToast" role="status" aria-live="polite" aria-atomic="true">
+      <span class="ui-toast-dot" aria-hidden="true"></span>
+      <span class="ui-toast-text" id="uiToastText">—</span>
+    </div>
+  </main>
+</body>
+</html>
